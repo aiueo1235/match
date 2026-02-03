@@ -1,68 +1,43 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>シンプル時計</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f0f2f5;
-        }
-        .clock-container {
-            text-align: center;
-            background: white;
-            padding: 2rem 3rem;
-            border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        #clock {
-            font-size: 4rem;
-            font-weight: bold;
-            color: #333;
-        }
-        #date {
-            font-size: 1.2rem;
-            color: #666;
-            margin-bottom: 0.5rem;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudySync</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
+    <header>
+        <h1>StudySync</h1>
+        <p class="sub-text">空きコマを合わせて課題を倒そう</p>
+    </header>
 
-    <div class="clock-container">
-        <div id="date">0000/00/00</div>
-        <div id="clock">00:00:00</div>
+    <div id="setup-screen" class="card">
+        <h3>📅 自分の空きコマ</h3>
+        <div class="grid" id="timetable-grid"></div>
+        <h3>📝 残っている課題</h3>
+        <input type="text" id="task-input" placeholder="例: レポート, 英語, 数学">
+        <button class="btn-primary" id="generate-btn">共有用QRを表示</button>
     </div>
 
-    <script>
-        function updateClock() {
-            const now = new Date();
-            
-            // 日付のフォーマット
-            const y = now.getFullYear();
-            const m = String(now.getMonth() + 1).padStart(2, '0');
-            const d = String(now.getDate()).padStart(2, '0');
-            
-            // 時刻のフォーマット
-            const h = String(now.getHours()).padStart(2, '0');
-            const min = String(now.getMinutes()).padStart(2, '0');
-            const s = String(now.getSeconds()).padStart(2, '0');
-            
-            document.getElementById('date').textContent = `${y}/${m}/${d}`;
-            document.getElementById('clock').textContent = `${h}:${min}:${s}`;
-        }
+    <div id="qr-screen" class="card hidden">
+        <h3>友達にスキャンさせてね</h3>
+        <div id="qrcode"></div>
+        <button class="btn-secondary" onclick="toggleScreen('setup-screen')">内容を編集する</button>
+    </div>
 
-        // 1秒ごとに実行
-        setInterval(updateClock, 1000);
-        
-        // 読み込み時にすぐ表示
-        updateClock();
-    </script>
+    <div id="match-screen" class="card hidden">
+        <div class="match-banner">🤝 マッチングしました！</div>
+        <h3>📍 被っている空きコマ</h3>
+        <div id="common-slots" class="result-box highlight-text"></div>
+        <h3>🔥 一緒にできる課題</h3>
+        <div id="common-tasks" class="result-box highlight-text" style="color: #eb4d4b;"></div>
+        <h3>📔 相手の課題リスト</h3>
+        <div id="friend-tasks" class="result-box"></div>
+        <button class="btn-secondary" onclick="window.location.href=window.location.pathname">自分の画面に戻る</button>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
