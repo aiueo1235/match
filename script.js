@@ -1,62 +1,117 @@
-const days = ['月', '火', '水', '木', '金'];
-let myData = JSON.parse(localStorage.getItem('studySyncData') || '{"slots":[], "tasks":""}');
-
-const grid = document.getElementById('timetable-grid');
-for (let i = 0; i < 25; i++) {
-    const slot = document.createElement('div');
-    slot.className = 'slot' + (myData.slots.includes(String(i)) ? ' selected' : '');
-    slot.innerHTML = `<span>${days[i % 5]}</span><span>${Math.floor(i / 5) + 1}</span>`;
-    slot.onclick = () => {
-        slot.classList.toggle('selected');
-        saveData();
-    };
-    slot.dataset.id = i;
-    grid.appendChild(slot);
+:root {
+    --primary: #6c5ce7;
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --text: #2d3436;
+    --accent: #ff7675;
 }
 
-document.getElementById('task-input').value = myData.tasks;
-document.getElementById('task-input').oninput = saveData;
-
-function saveData() {
-    myData = {
-        slots: Array.from(document.querySelectorAll('.slot.selected')).map(s => s.dataset.id),
-        tasks: document.getElementById('task-input').value
-    };
-    localStorage.setItem('studySyncData', JSON.stringify(myData));
+/* ダークモード */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary: #a29bfe;
+        --bg: #1e272e;
+        --card: #2f3640;
+        --text: #f5f6fa;
+    }
 }
 
-document.getElementById('generate-btn').onclick = () => {
-    const jsonStr = JSON.stringify(myData);
-    const url = `${window.location.origin}${window.location.pathname}?data=${encodeURIComponent(jsonStr)}`;
-    const qrContainer = document.getElementById("qrcode");
-    qrContainer.innerHTML = ""; 
-    new QRCode(qrContainer, { text: url, width: 220, height: 220 });
-    toggleScreen('qr-screen');
-};
-
-const params = new URLSearchParams(window.location.search);
-if (params.has('data')) {
-    const friendData = JSON.parse(decodeURIComponent(params.get('data')));
-    showResults(friendData);
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: 0.3s;
 }
 
-function showResults(friend) {
-    toggleScreen('match-screen');
-    const common = friend.slots.filter(s => myData.slots.includes(s));
-    document.getElementById('common-slots').innerHTML = common.length > 0 
-        ? common.map(id => `${days[id % 5]}${Math.floor(id / 5) + 1}`).join(', ') : "なし";
+header { text-align: center; margin-bottom: 20px; }
+h1 { color: var(--primary); margin-bottom: 5px; }
+.sub-text { font-size: 0.8rem; opacity: 0.7; }
 
-    const myT = myData.tasks.split(',').map(t => t.trim().toLowerCase()).filter(t => t);
-    const frT = friend.tasks.split(',').map(t => t.trim().toLowerCase()).filter(t => t);
-    const commonT = frT.filter(t => myT.includes(t));
-    const onlyFrT = frT.filter(t => !myT.includes(t));
-
-    document.getElementById('common-tasks').innerHTML = commonT.length > 0
-        ? `<ul>${commonT.map(t => `<li>${t}</li>`).join('')}</ul>` : "なし";
-    document.getElementById('friend-tasks').innerHTML = `<ul>${onlyFrT.map(t => `<li>${t}</li>`).join('')}</ul>`;
+.card {
+    background: var(--card);
+    width: 100%;
+    max-width: 400px;
+    padding: 24px;
+    border-radius: 30px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    margin-bottom: 20px;
 }
 
-function toggleScreen(id) {
-    ['setup-screen', 'qr-screen', 'match-screen'].forEach(s => document.getElementById(s).classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
+h3 {
+    font-size: 0.9rem;
+    margin-top: 20px;
+    border-left: 4px solid var(--primary);
+    padding-left: 10px;
 }
+
+/* グリッド */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.slot {
+    aspect-ratio: 1;
+    background: rgba(128,128,128,0.1);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.slot.selected {
+    background: var(--primary);
+    color: white;
+    transform: scale(1.05);
+}
+
+/* 入力 */
+input, select {
+    width: 100%;
+    padding: 15px;
+    border-radius: 15px;
+    border: 2px solid rgba(128,128,128,0.1);
+    background: rgba(128,128,128,0.05);
+    color: var(--text);
+    font-size: 1rem;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+/* ボタン */
+button {
+    width: 100%;
+    padding: 18px;
+    border-radius: 20px;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-primary { background: var(--primary); color: white; box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3); }
+.btn-secondary { background: transparent; color: var(--primary); border: 2px solid var(--primary); margin-top: 10px; }
+
+/* マッチ結果 */
+.match-banner { background: var(--primary); color: white; padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; margin-bottom: 20px; }
+.res-box { background: rgba(128,128,128,0.05); padding: 15px; border-radius: 15px; margin-bottom: 15px; }
+.main-loc { font-size: 1.2rem; font-weight: bold; color: var(--primary); }
+
+.task-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-right: 5px; }
+.urgent { color: var(--accent); font-weight: bold; border-right: 4px solid var(--accent); }
+.done-btn { width: auto; padding: 5px 10px; font-size: 0.7rem; background: #2ecc71; color: white; border-radius: 8px; }
+
+.hidden { display: none; }
+#qrcode { display: flex; justify-content: center; padding: 15px; background: white; border-radius: 15px; }
