@@ -1,1 +1,68 @@
 
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>シンプル時計</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+        .clock-container {
+            text-align: center;
+            background: white;
+            padding: 2rem 3rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #clock {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #333;
+        }
+        #date {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="clock-container">
+        <div id="date">0000/00/00</div>
+        <div id="clock">00:00:00</div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            
+            // 日付のフォーマット
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            
+            // 時刻のフォーマット
+            const h = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('date').textContent = `${y}/${m}/${d}`;
+            document.getElementById('clock').textContent = `${h}:${min}:${s}`;
+        }
+
+        // 1秒ごとに実行
+        setInterval(updateClock, 1000);
+        
+        // 読み込み時にすぐ表示
+        updateClock();
+    </script>
+</body>
+</html>
