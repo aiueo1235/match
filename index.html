@@ -3,39 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StudySync</title>
+    <title>StudySync Pro</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
 <body>
+
     <header>
-        <h1>StudySync</h1>
-        <p class="sub-text">空きコマを合わせて課題を倒そう</p>
+        <h1>StudySync Pro</h1>
+        <p class="sub-text">場所と緊急度もシェアしよう</p>
     </header>
 
     <div id="setup-screen" class="card">
-        <h3>📅 自分の空きコマ</h3>
+        <h3>📍 今どこにいる？</h3>
+        <select id="location-input">
+            <option value="図書館">図書館 📚</option>
+            <option value="学食">学食 🍱</option>
+            <option value="ラウンジ">ラウンジ ☕</option>
+            <option value="空き教室">空き教室 🏫</option>
+            <option value="外">外のベンチ 🌳</option>
+        </select>
+
+        <h3>📅 空きコマを選択</h3>
         <div class="grid" id="timetable-grid"></div>
-        <h3>📝 残っている課題</h3>
-        <input type="text" id="task-input" placeholder="例: レポート, 英語, 数学">
-        <button class="btn-primary" id="generate-btn">共有用QRを表示</button>
+
+        <h3>📝 課題 (「!」をつけると緊急)</h3>
+        <input type="text" id="task-input" placeholder="例: レポート!, 数学, 英語!">
+        
+        <button class="btn-primary" id="generate-btn">マッチング用QR生成</button>
     </div>
 
     <div id="qr-screen" class="card hidden">
         <h3>友達にスキャンさせてね</h3>
         <div id="qrcode"></div>
-        <button class="btn-secondary" onclick="toggleScreen('setup-screen')">内容を編集する</button>
+        <button class="btn-secondary" onclick="toggleScreen('setup-screen')">修正する</button>
     </div>
 
     <div id="match-screen" class="card hidden">
-        <div class="match-banner">🤝 マッチングしました！</div>
-        <h3>📍 被っている空きコマ</h3>
-        <div id="common-slots" class="result-box highlight-text"></div>
-        <h3>🔥 一緒にできる課題</h3>
-        <div id="common-tasks" class="result-box highlight-text" style="color: #eb4d4b;"></div>
-        <h3>📔 相手の課題リスト</h3>
-        <div id="friend-tasks" class="result-box"></div>
-        <button class="btn-secondary" onclick="window.location.href=window.location.pathname">自分の画面に戻る</button>
+        <div class="match-banner">🚀 マッチ成功！合流しよう</div>
+        
+        <h3>📍 相手の場所</h3>
+        <div id="res-loc" class="res-box main-loc"></div>
+
+        <h3>📅 被っている時間</h3>
+        <div id="res-slots" class="res-box"></div>
+
+        <h3>🔥 一緒にやる課題</h3>
+        <div id="res-tasks" class="res-box"></div>
+
+        <button class="btn-secondary" onclick="window.location.href=window.location.pathname">戻る</button>
     </div>
 
     <script src="script.js"></script>
