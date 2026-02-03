@@ -1,69 +1,105 @@
-:root {
-    --primary: #4834d4;
-    --secondary: #686de0;
-    --bg: #f6f9fc;
-    --card: #ffffff;
-    --text: #130f40;
+const days = ['月', '火', '水', '木', '金'];
+let myData = JSON.parse(localStorage.getItem('studySyncPro') || '{"slots":[], "tasks":"", "loc":"図書館"}');
+
+// 1. 初期化: 空きコマグリッドの作成
+const grid = document.getElementById('timetable-grid');
+for (let i = 0; i < 25; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'slot' + (myData.slots.includes(String(i)) ? ' selected' : '');
+    slot.innerHTML = `<b>${days[i % 5]}</b>${Math.floor(i / 5) + 1}`;
+    slot.onclick = () => {
+        slot.classList.toggle('selected');
+        save();
+    };
+    slot.dataset.id = i;
+    grid.appendChild(slot);
 }
 
-body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
-    margin: 0; padding: 20px;
-    display: flex; flex-direction: column; align-items: center;
+// データの復元
+document.getElementById('task-input').value = myData.tasks;
+document.getElementById('location-input').value = myData.loc;
+
+// 入力イベントの登録
+document.querySelectorAll('input, select').forEach(el => {
+    el.oninput = save;
+});
+
+function save() {
+    myData = {
+        slots: Array.from(document.querySelectorAll('.slot.selected')).map(s => s.dataset.id),
+        tasks: document.getElementById('task-input').value,
+        loc: document.getElementById('location-input').value
+    };
+    localStorage.setItem('studySyncPro', JSON.stringify(myData));
 }
 
-header { text-align: center; margin-bottom: 25px; }
-h1 { margin: 0; color: var(--primary); font-size: 2rem; }
-.sub-text { font-size: 0.9rem; color: #535c68; }
+// QR生成ボタン
+document.getElementById('generate-btn').onclick = () => {
+    const dataStr = encodeURIComponent(JSON.stringify(myData));
+    const url = `${window.location.origin}${window.location.pathname}?data=${dataStr}`;
+    
+    const qrContainer = document.getElementById("qrcode");
+    qrContainer.innerHTML = ""; 
+    new QRCode(qrContainer, { text: url, width: 220, height: 220 });
+    
+    toggleScreen('qr-screen');
+};
 
-.card {
-    background: var(--card);
-    width: 100%; max-width: 400px;
-    padding: 24px; border-radius: 28px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.05);
-    box-sizing: border-box; margin-bottom: 20px;
+// URLパラメータによるマッチング処理
+const params = new URLSearchParams(window.location.search);
+if (params.has('data')) {
+    try {
+        const friendData = JSON.parse(decodeURIComponent(params.get('data')));
+        showResults(friendData);
+    } catch (e) {
+        console.error("データ解析エラー", e);
+    }
 }
 
-h3 { margin-top: 0; font-size: 1rem; color: var(--secondary); }
+function showResults(friend) {
+    toggleScreen('match-screen');
+    document.getElementById('res-loc').textContent = friend.loc + "にいるよ！";
+    
+    const common = friend.slots.filter(s => myData.slots.includes(s));
+    document.getElementById('res-slots').innerHTML = common.length > 0 
+        ? common.map(id => `【${days[id % 5]}${Math.floor(id / 5) + 1}】`).join(' ') 
+        : "重なる時間がないみたい...";
 
-.grid {
-    display: grid; grid-template-columns: repeat(5, 1fr);
-    gap: 8px; margin: 15px 0 25px 0;
+    const myT = myData.tasks.split(',').map(t => t.trim().toLowerCase());
+    const frT = friend.tasks.split(',').map(t => t.trim());
+    
+    const taskHTML = frT.map(t => {
+        const isUrgent = t.includes('!');
+        const cleanT = t.replace('!', '');
+        const isCommon = myT.includes(cleanT.toLowerCase());
+        
+        return `
+        <div class="task-item ${isUrgent ? 'urgent' : ''}">
+            <span>${isCommon ? '🤝' : '📄'} ${cleanT} ${isUrgent ? '⚠️' : ''}</span>
+            <button class="done-btn" onclick="finishTask(this)">完了</button>
+        </div>`;
+    }).join('');
+    
+    document.getElementById('res-tasks').innerHTML = taskHTML || "課題はないようです。";
 }
 
-.slot {
-    aspect-ratio: 1; background: #f1f2f6; border-radius: 12px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-size: 0.65rem; font-weight: bold; color: #95afc0; cursor: pointer;
+// 完了ボタン（紙吹雪）
+function finishTask(btn) {
+    confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#6c5ce7', '#a29bfe', '#ff7675']
+    });
+    const parent = btn.parentElement;
+    parent.style.opacity = "0.3";
+    parent.style.textDecoration = "line-through";
+    btn.remove();
 }
 
-.slot.selected {
-    background: var(--primary); color: white;
-    box-shadow: 0 4px 12px rgba(72, 52, 212, 0.3);
+function toggleScreen(id) {
+    ['setup-screen', 'qr-screen', 'match-screen'].forEach(s => {
+        document.getElementById(s).classList.add('hidden');
+    });
+    document.getElementById(id).classList.remove('hidden');
 }
-
-input[type="text"] {
-    width: 100%; padding: 16px; border: 2px solid #dff9fb;
-    border-radius: 16px; font-size: 1rem; box-sizing: border-box;
-    margin-bottom: 20px; background: #f9f9f9;
-}
-
-button {
-    width: 100%; padding: 18px; border-radius: 18px; border: none;
-    font-size: 1rem; font-weight: 800; cursor: pointer;
-}
-
-.btn-primary { background: var(--primary); color: white; }
-.btn-secondary { background: #f1f2f6; color: var(--secondary); margin-top: 15px; }
-
-.match-banner {
-    background: #ebfbee; color: #27ae60; padding: 15px;
-    border-radius: 16px; text-align: center; font-weight: bold; margin-bottom: 20px;
-}
-
-.result-box { background: #f8f9fa; padding: 16px; border-radius: 16px; margin-bottom: 15px; }
-.highlight-text { color: var(--primary); font-weight: bold; }
-.hidden { display: none; }
-#qrcode { display: flex; justify-content: center; padding: 15px; }
